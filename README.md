@@ -16,7 +16,7 @@ Last updated: 7/18/2024
 Detailed instructions on how to install and set up the project. A working API key can be obtained for free on OpenWeatherMap.org
 
 ```bash
-git clone https://github.com/cadenpayne83/aqimap.git
+git clone https://github.com/cadenpayne83/aqi_map.git
 cd projectname
 npm install
 ```
