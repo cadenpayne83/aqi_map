@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>AQI Map</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <style>
+        body, html {
+            height: 100%;
+            margin: 0;
+        }
+        #map {
+            height: 100%;
+            width: 100%;
+        }
+        #loading {
+            position: fixed;
+            height: 100%;
+            width: 100%;
+            top: 0;
+            left: 0;
+            background: rgba(255, 255, 255, 1);
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+        .spinner {
+            border: 16px solid #f3f3f3;
+            border-top: 16px solid #3498db;
+            border-radius: 50%;
+            width: 120px;
+            height: 120px;
+            animation: spin 2s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div id="loading">
+        <div class="spinner"></div>
+        Loading AQI Data...
+    </div>
+    <div id="map" style="display:none;"></div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script>
+        $(document).ready(function() {
+            $.ajax({
+                url: '/get_aqi_data', // Flask route to get AQI data
+                method: 'GET',
+                success: function(data) {
+                    // Sets viewport to display entire continental United States
+                    var map = L.map('map').setView([37.8, -96], 4);
+
+                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                        maxZoom: 18,
+                    }).addTo(map);
+
+                    data.forEach(function(city) {
+                        var aqi = city.aqi;
+                        var color;
+                        if (aqi <= 50) {
+                            color = 'green';
+                        } else if (aqi <= 100) {
+                            color = 'yellow';
+                        } else if (aqi <= 150) {
+                            color = 'orange';
+                        } else if (aqi <= 200) {
+                            color = 'red';
+                        } else if (aqi <= 300) {
+                            color = 'purple';
+                        } else {
+                            color = 'maroon';
+                        }
+
+                        L.circleMarker([city.lat, city.lng], {
+                            color: color,
+                            radius: 10
+                        }).bindPopup(`<b>${city.city}</b><br>AQI: ${aqi}`).addTo(map);
+                    });
+
+                    $('#loading').hide();
+                    $('#map').show();
+
+                    // To fix display issues
+                    map.invalidateSize();
+                },
+                error: function(error) {
+                    console.error('Error loading AQI data:', error);
+                    $('#loading').html('Failed to load AQI data.');
+                }
+            });
+        });
+    </script>
+</body>
+</html>
